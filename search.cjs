@@ -39,8 +39,9 @@ async function main() {
       console.log(`⚠️  Failed: ${result.failed.join(', ')}`);
     }
   } else if (args[0] === '--reindex') {
-    console.log('Reindexing workspace...');
-    const result = await reindexAll('/opt/openclaw/workspace');
+    const workspace = process.env.SEMANTIC_SEARCH_WORKSPACE || '/opt/openclaw/workspace';
+    console.log(`Reindexing workspace: ${workspace}`);
+    const result = await reindexAll(workspace);
     console.log(`✅ Indexed ${result.indexed} chunks from ~${result.files_count} files`);
   } else if (args[0] === '--stats') {
     const db = getVectorDatabase();

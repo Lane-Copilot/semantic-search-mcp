@@ -96,11 +96,33 @@ Get statistics about the indexed documents.
 - Database size
 - List of indexed files
 
+## CLI Usage
+
+The tool can be used directly via command line without MCP:
+
+```bash
+# Search
+node search.cjs "your query here"
+
+# Index a file
+node search.cjs --index /path/to/file.md
+
+# Index a directory
+node search.cjs --index-dir /path/to/directory
+
+# Reindex entire workspace
+node search.cjs --reindex
+
+# Show stats
+node search.cjs --stats
+```
+
 ## Configuration
 
 ### Environment Variables
 
-- `WORKSPACE_ROOT`: Default workspace directory (default: current directory)
+- `SEMANTIC_SEARCH_WORKSPACE`: Workspace root for `--reindex` command (default: `/opt/openclaw/workspace`)
+- `WORKSPACE_ROOT`: Default workspace directory for MCP tools (default: current directory)
 - `LANCEDB_PATH`: Path to LanceDB storage (default: `./lancedb`)
 
 ### MCP Client Configuration
