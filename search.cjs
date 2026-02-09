@@ -48,8 +48,8 @@ async function main() {
     const stats = await db.getStats();
     console.log('📊 Index Stats:');
     console.log(`   Total chunks: ${stats.total_chunks}`);
-    console.log(`   Indexed files: ${stats.indexed_files.length}`);
-    console.log(`   Last updated: ${stats.last_updated || 'never'}`);
+    console.log(`   Indexed files: ${stats.total_files}`);
+    console.log(`   Database size: ${stats.db_size_mb} MB`);
   } else {
     // Search
     const query = args.join(' ');
