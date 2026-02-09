@@ -1,6 +1,6 @@
 # Semantic Search MCP Server
 
-A local-first MCP server that enables semantic search across Lane's workspace using Transformers.js and LanceDB.
+A local-first MCP server that enables semantic search across your workspace using Transformers.js and LanceDB. Built for AI agents running on OpenClaw.
 
 ## Features
 

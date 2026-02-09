@@ -7,7 +7,7 @@ The stub server is fully functional and responds to all tool calls with mock dat
 ### Build
 
 ```bash
-cd /opt/openclaw/workspace/mcp-servers/semantic-search
+cd /path/to/semantic-search
 npm install --cache /tmp/.npm-cache --include=dev
 node ./node_modules/typescript/bin/tsc
 ```
@@ -95,7 +95,7 @@ This opens a web interface where you can:
   "mcpServers": {
     "semantic-search": {
       "command": "node",
-      "args": ["/opt/openclaw/workspace/mcp-servers/semantic-search/build/index.js"]
+      "args": ["/path/to/semantic-search/build/index.js"]
     }
   }
 }

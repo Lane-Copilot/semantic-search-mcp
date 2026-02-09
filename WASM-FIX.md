@@ -14,7 +14,7 @@ failed to map segment from shared object
 
 ### 1. WASM Backend Configuration ✅
 
-Modified `/opt/openclaw/workspace/mcp-servers/semantic-search/src/embeddings.ts` to configure Transformers.js to use WASM instead of native bindings:
+Modified `/path/to/semantic-search/src/embeddings.ts` to configure Transformers.js to use WASM instead of native bindings:
 
 ```typescript
 import { env } from '@xenova/transformers';
@@ -46,7 +46,7 @@ Created stub for `sharp` image processing library (not needed for text embedding
 
 Successfully compiled TypeScript with new configuration:
 ```bash
-cd /opt/openclaw/workspace/mcp-servers/semantic-search
+cd /path/to/semantic-search
 node node_modules/typescript/bin/tsc  # ✅ Success - no errors
 ```
 
@@ -98,7 +98,7 @@ Cache location: `~/.cache/huggingface/hub/models--Xenova--all-MiniLM-L6-v2/`
 Once network access is granted:
 
 ```bash
-cd /opt/openclaw/workspace/mcp-servers/semantic-search
+cd /path/to/semantic-search
 
 # Test single embedding
 node -e "import('./build/embeddings.js').then(m => m.embed('test').then(console.log))"
