@@ -1,6 +1,10 @@
-# Semantic Search MCP Server
+# Semantic Search for AI Agents
 
-A local-first MCP server that enables semantic search across your workspace using Transformers.js and LanceDB. Built for AI agents running on OpenClaw.
+A local-first semantic search tool for AI assistants. Index your workspace, search with natural language, save context tokens. Built with Transformers.js and LanceDB.
+
+**Works as:** CLI tool (primary) • MCP server (optional)
+
+> 📖 **New to this?** Read the [Agent Integration Guide](AGENT-GUIDE.md) — it covers the *habit* of using semantic search effectively, not just the API.
 
 ## Features
 
@@ -11,94 +15,20 @@ A local-first MCP server that enables semantic search across your workspace usin
 - ⚡ **Local Inference**: No external API calls, runs entirely on CPU
 - 🔧 **Incremental Indexing**: Update individual files or entire directories
 
-## Installation
+## Quick Start
 
 ```bash
-# Install dependencies
-npm install
+# Install
+npm install && npm run build
 
-# Build the project
-npm run build
+# Index your workspace
+node search.cjs --reindex
+
+# Search
+node search.cjs "what did we discuss yesterday"
 ```
 
-## Tools
-
-### search
-Perform semantic search across indexed documents.
-
-**Parameters:**
-- `query` (string, required): Search query in natural language or keywords
-- `limit` (number, optional): Maximum results to return (1-100, default: 10)
-- `hybrid` (boolean, optional): Enable hybrid search (default: true)
-
-**Example:**
-```json
-{
-  "query": "when did we discuss security patterns",
-  "limit": 5,
-  "hybrid": true
-}
-```
-
-### index_file
-Index or re-index a specific file.
-
-**Parameters:**
-- `path` (string, required): Absolute or relative path to the file
-
-**Example:**
-```json
-{
-  "path": "memory/2026-02-08.md"
-}
-```
-
-### index_directory
-Index all matching files in a directory.
-
-**Parameters:**
-- `path` (string, required): Directory path to index
-- `pattern` (string, optional): Glob pattern (default: "**/*.md")
-
-**Example:**
-```json
-{
-  "path": "memory",
-  "pattern": "**/*.md"
-}
-```
-
-### reindex_all
-Clear the index and rebuild from scratch. Automatically indexes:
-- `memory/**/*.md`
-- `diaries/**/*.md`
-- `.lane/plans/**/*.md`
-- `*.md` (root markdown files)
-
-**Parameters:**
-- `workspace_root` (string, optional): Workspace root directory
-
-**Example:**
-```json
-{
-  "workspace_root": "/opt/openclaw/workspace"
-}
-```
-
-### get_stats
-Get statistics about the indexed documents.
-
-**No parameters required.**
-
-**Returns:**
-- Total chunks
-- Total files
-- Database size
-- List of indexed files
-
-## CLI Usage
-
-The tool can be used directly via command line without MCP:
+## CLI Usage (Recommended for AI Agents)
 
 ```bash
 # Search
@@ -107,9 +37,6 @@ node search.cjs "your query here"
 # Index a file
 node search.cjs --index /path/to/file.md
 
-# Index a directory
-node search.cjs --index-dir /path/to/directory
-
 # Reindex entire workspace
 node search.cjs --reindex
 
@@ -117,99 +44,122 @@ node search.cjs --reindex
 node search.cjs --stats
 ```
 
-## Configuration
+### Wrapper Script (Optional)
 
-### Environment Variables
+Create a wrapper to filter runtime warnings and simplify usage:
 
-- `SEMANTIC_SEARCH_WORKSPACE`: Workspace root for `--reindex` command (default: `/opt/openclaw/workspace`)
-- `WORKSPACE_ROOT`: Default workspace directory for MCP tools (default: current directory)
-- `LANCEDB_PATH`: Path to LanceDB storage (default: `./lancedb`)
+```bash
+#!/bin/bash
+cd /path/to/semantic-search && node search.cjs "$@" 2>&1 | grep -v "pthread_setaffinity"
+```
 
-### MCP Client Configuration
+Save as `semantic-search` in your PATH, then:
+```bash
+semantic-search "your query"
+```
 
-Add to your MCP client config (e.g., `claude_desktop_config.json`):
+## The Core Habit
+
+**For AI Assistants:** Don't read entire files when you need 3 lines.
+
+```
+Need past information?
+  1. semantic-search "query" FIRST
+  2. Review snippets (with file paths + line numbers)
+  3. Read only the specific lines you need
+```
+
+This saves context tokens and is faster than scanning files manually.
+
+## MCP Server Usage (Optional)
+
+If your client supports the Model Context Protocol:
 
 ```json
 {
   "mcpServers": {
     "semantic-search": {
       "command": "node",
-      "args": ["/opt/openclaw/workspace/mcp-servers/semantic-search/build/index.js"],
+      "args": ["/path/to/semantic-search/build/index.js"],
       "env": {
-        "WORKSPACE_ROOT": "/opt/openclaw/workspace",
-        "LANCEDB_PATH": "/opt/openclaw/workspace/mcp-servers/semantic-search/lancedb"
+        "WORKSPACE_ROOT": "/your/workspace",
+        "LANCEDB_PATH": "/path/to/semantic-search/lancedb"
       }
     }
   }
 }
 ```
 
+### MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `search` | Semantic search with optional hybrid mode |
+| `index_file` | Index a single file |
+| `index_directory` | Index files matching a pattern |
+| `reindex_all` | Clear and rebuild entire index |
+| `get_stats` | Index statistics |
+
+## Configuration
+
+### Environment Variables
+
+- `SEMANTIC_SEARCH_WORKSPACE`: Workspace root for reindexing (default: current directory)
+- `LANCEDB_PATH`: Vector database location (default: `./lancedb`)
+
+### Default Index Paths
+
+When running `--reindex`, these directories are indexed:
+- `memory/**/*.md`
+- `diaries/**/*.md`
+- `.lane/plans/**/*.md`
+- `*.md` (root markdown files)
+
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│         Semantic Search MCP Server          │
-├─────────────────────────────────────────────┤
-│                                             │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐ │
-│  │  Tools   │  │  Search  │  │ Chunking │ │
-│  └─────┬────┘  └─────┬────┘  └─────┬────┘ │
-│        │             │              │      │
-│        └─────────────┼──────────────┘      │
-│                      │                     │
-│         ┌────────────┴────────────┐        │
-│         │                         │        │
-│    ┌────▼─────┐          ┌────────▼─────┐ │
-│    │ Embeddings│          │  VectorDB    │ │
-│    │(Transformers.js)     │  (LanceDB)   │ │
-│    └──────────┘          └──────────────┘ │
-│                                             │
-└─────────────────────────────────────────────┘
+┌─────────────────┐
+│  search.cjs     │  CLI interface
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    │         │
+┌───▼────┐ ┌──▼───┐
+│Embeddings│ │Storage│
+│(Transformers.js)│ │(LanceDB)│
+└─────────┘ └──────┘
 ```
 
-### Components
-
-- **embeddings.ts**: Transformers.js wrapper for generating embeddings
-- **vectordb.ts**: LanceDB integration for vector storage and retrieval
-- **search.ts**: Document chunking and hybrid search logic
-- **tools.ts**: MCP tool definitions
-- **index.ts**: Server entry point and initialization
+- **Model:** all-MiniLM-L6-v2 (384 dimensions, ~90MB download)
+- **Database:** LanceDB (disk-persistent, no external service)
+- **Search:** Cosine similarity + keyword boost
 
 ## Performance
 
-- **First search after cold start**: ~3 seconds (model loading)
-- **Subsequent searches**: <500ms for 10k documents
-- **Embedding model**: 384 dimensions, ~80MB on disk
-- **Index storage**: ~100MB for 10k documents
-
-## Development
-
-```bash
-# Watch mode (auto-rebuild on changes)
-npm run watch
-
-# Start server manually (for testing)
-npm start
-```
+- **Cold start:** ~3 seconds (model loading)
+- **Warm searches:** <500ms
+- **Index size:** ~100MB per 10k documents
 
 ## Troubleshooting
 
-### Model Download Issues
-The embedding model (~80MB) is downloaded on first use and cached locally. If download fails:
-1. Check network connectivity
-2. Ensure sufficient disk space
-3. Check Transformers.js cache directory
+### pthread_setaffinity warnings
+Harmless ONNX runtime warnings. Use the wrapper script to filter them.
 
-### LanceDB Errors
-If you encounter database errors:
-1. Delete the `lancedb` directory
-2. Run `reindex_all` to rebuild the index
+### Model download fails
+Ensure `huggingface.co` is accessible. Model is cached after first download.
 
-### Memory Issues
-If running out of memory:
-1. Reduce batch size in `embeddings.ts`
-2. Process files in smaller batches
-3. Increase Node.js heap size: `NODE_OPTIONS=--max-old-space-size=4096`
+### Stale results
+Run `--reindex` to rebuild from scratch.
+
+### Memory issues
+Increase heap: `NODE_OPTIONS=--max-old-space-size=4096 node search.cjs ...`
+
+## Documentation
+
+- [AGENT-GUIDE.md](AGENT-GUIDE.md) — Integration guide for AI assistants
+- [INTEGRATION.md](INTEGRATION.md) — Technical implementation details
+- [TESTING.md](TESTING.md) — Test procedures
+- [WASM-FIX.md](WASM-FIX.md) — WebAssembly backend notes
 
 ## License
 
